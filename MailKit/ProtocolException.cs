@@ -1,9 +1,9 @@
 //
 // ProtocolException.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -71,6 +71,7 @@ namespace MailKit {
 		/// <param name="innerException">An inner exception.</param>
 		protected ProtocolException (string message, Exception innerException) : base (message, innerException)
 		{
+			HelpLink = "https://github.com/jstedfast/MailKit/blob/master/FAQ.md#ProtocolLog";
 		}
 
 		/// <summary>
@@ -82,6 +83,7 @@ namespace MailKit {
 		/// <param name="message">The error message.</param>
 		protected ProtocolException (string message) : base (message)
 		{
+			HelpLink = "https://github.com/jstedfast/MailKit/blob/master/FAQ.md#ProtocolLog";
 		}
 
 		/// <summary>
@@ -92,6 +94,7 @@ namespace MailKit {
 		/// </remarks>
 		protected ProtocolException ()
 		{
+			HelpLink = "https://github.com/jstedfast/MailKit/blob/master/FAQ.md#ProtocolLog";
 		}
 	}
 }

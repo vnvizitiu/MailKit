@@ -141,7 +141,7 @@ which should improve performance of sending messages (although might not be very
 
 ## License Information
 
-MailKit is Copyright (C) 2013-2016 Xamarin Inc. and is licensed under the MIT license:
+MailKit is Copyright (C) 2013-2017 Xamarin Inc. and is licensed under the MIT license:
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -173,11 +173,9 @@ simply enter the following command:
 ## Getting the Source Code
 
 First, you'll need to clone MailKit from my GitHub repository. To do this using the command-line version of Git,
-you'll need to issue the following commands in your terminal:
+you'll need to issue the following command in your terminal:
 
-    git clone https://github.com/jstedfast/MailKit.git
-    cd MailKit
-    git submodule update --init --recursive
+    git clone --recursive https://github.com/jstedfast/MailKit.git
 
 If you are using [TortoiseGit](https://tortoisegit.org) on Windows, you'll need to right-click in the directory
 where you'd like to clone MailKit and select **Git Clone...** in the menu. Once you do that, you'll get the
@@ -206,16 +204,16 @@ directory and select **Git Sync...** in the menu. Once you do that, you'll need 
 
 In the top-level MailKit directory, there are a number of solution files; they are:
 
-* **MailKit.sln** - includes the projects for .NET 4.0, .NET 4.5, .NET Core, Xamarin.Android, and Xamarin.iOS.
+* **MailKit.sln** - includes the projects for .NET 4.0, .NET 4.5, .NETStandard 1.3, Windows Universal 8.1,
+  Xamarin.Android, and Xamarin.iOS.
 * **MailKit.Mobile.sln** - includes only the Xamarin.iOS and Xamarin.Android projects.
 * **MailKit.Net45.sln** - includes only the .NET 4.5 project and the unit tests.
 * **MailKit.Net40.sln** - includes only the .NET 4.0 project.
-* **MailKit.Win.sln** - includes only the Windows Universal 8.1 project (aka wpa81).
 
 If you don't have the Xamarin products, you'll probably want to open the MailKit.Net45.sln instead of MailKit.sln.
 
 Once you've opened the appropriate MailKit solution file in either [Xamarin Studio](https://www.xamarin.com/download)
-or [Visual Studio 2015](https://beta.visualstudio.com/vs/community/), you can simply choose the **Debug** or **Release**
+or [Visual Studio 2017](https://www.visualstudio.com/downloads/), you can simply choose the **Debug** or **Release**
 build configuration and then build.
 
 Note: The **Release** build will generate the xml API documentation, but the **Debug** build will not.

@@ -43,13 +43,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\submodules\MimeKit\MimeKit\MimeKit.csproj">
+    <ProjectReference Include="..\submodules\MimeKit\MimeKit\MimeKit.Net45.csproj">
       <Project>{D5F54A4F-D84B-430F-9271-F7861E285B3E}</Project>
-      <Name>MimeKit</Name>
+      <Name>MimeKit.Net45</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MailKit\MailKit.csproj">
+    <ProjectReference Include="..\MailKit\MailKit.Net45.csproj">
       <Project>{7264D469-A390-4C10-9C87-DAA37EDD3C1D}</Project>
-      <Name>MailKit</Name>
+      <Name>MailKit.Net45</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -66,6 +66,7 @@
     <Compile Include="ArgumentExceptionTests.cs" />
     <Compile Include="BodyPartTests.cs" />
     <Compile Include="EnvelopeTests.cs" />
+    <Compile Include="ExceptionTests.cs" />
     <Compile Include="MessageSortingTests.cs" />
     <Compile Include="MessageThreadingTests.cs" />
     <Compile Include="UniqueIdRangeTests.cs" />
@@ -153,6 +154,10 @@
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\fetch9.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getbodypart.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getbodypart2.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getbodypartheaders.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getbodypartheaders2.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getmessageheaders.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getmessageheaders2.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream2.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream3.txt" />

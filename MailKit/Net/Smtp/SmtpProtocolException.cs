@@ -1,9 +1,9 @@
-﻿//
+//
 // SmtpProtocolException.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -56,6 +56,9 @@ namespace MailKit.Net.Smtp {
 		/// </remarks>
 		/// <param name="info">The serialization info.</param>
 		/// <param name="context">The streaming context.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <paramref name="info"/> is <c>null</c>.
+		/// </exception>
 		[SecuritySafeCritical]
 		protected SmtpProtocolException (SerializationInfo info, StreamingContext context) : base (info, context)
 		{

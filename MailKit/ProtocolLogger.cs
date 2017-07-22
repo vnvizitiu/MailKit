@@ -1,9 +1,9 @@
-﻿//
+//
 // ProtocolLogger.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,7 @@ namespace MailKit {
 		readonly Stream stream;
 		bool clientMidline;
 		bool serverMidline;
+		bool leaveOpen;
 
 #if !NETFX_CORE
 		/// <summary>
@@ -72,11 +73,13 @@ namespace MailKit {
 		/// Creates a new <see cref="ProtocolLogger"/> to log to a specified stream.
 		/// </remarks>
 		/// <param name="stream">The stream.</param>
-		public ProtocolLogger (Stream stream)
+		/// <param name="leaveOpen"><c>true</c> if the stream should be left open after the protocol logger is disposed.</param>
+		public ProtocolLogger (Stream stream, bool leaveOpen = false)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
+			this.leaveOpen = leaveOpen;
 			this.stream = stream;
 		}
 
@@ -248,7 +251,7 @@ namespace MailKit {
 		/// <c>false</c> to release only the unmanaged resources.</param>
 		protected virtual void Dispose (bool disposing)
 		{
-			if (disposing)
+			if (disposing && !leaveOpen)
 				stream.Dispose ();
 		}
 

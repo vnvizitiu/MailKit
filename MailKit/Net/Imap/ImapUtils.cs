@@ -1,9 +1,9 @@
-﻿//
+//
 // ImapUtils.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,8 @@ namespace MailKit.Net.Imap {
 	/// </summary>
 	static class ImapUtils
 	{
+		const FolderAttributes SpecialUseAttributes = FolderAttributes.All | FolderAttributes.Archive | FolderAttributes.Drafts |
+		    FolderAttributes.Flagged | FolderAttributes.Inbox | FolderAttributes.Junk | FolderAttributes.Sent | FolderAttributes.Trash;
 		const string QuotedSpecials = " \t()<>@,;:\\\"/[]?=";
 		static int InboxLength = "INBOX".Length;
 
@@ -406,7 +408,7 @@ namespace MailKit.Net.Imap {
 				case "\\Junk":          attrs |= FolderAttributes.Junk; break;
 				case "\\Sent":          attrs |= FolderAttributes.Sent; break;
 				case "\\Trash":         attrs |= FolderAttributes.Trash; break;
-					// XLIST flags:
+				// XLIST flags:
 				case "\\AllMail":       attrs |= FolderAttributes.All; break;
 				case "\\Important":     attrs |= FolderAttributes.Flagged; break;
 				case "\\Inbox":         attrs |= FolderAttributes.Inbox; break;
@@ -444,6 +446,10 @@ namespace MailKit.Net.Imap {
 			case ImapTokenType.Atom:
 				encodedName = (string) token.Value;
 				break;
+			case ImapTokenType.Nil:
+				// Note: according to rfc3501, section 4.5, NIL is acceptable as a mailbox name.
+				encodedName = "NIL";
+				break;
 			default:
 				throw ImapEngine.UnexpectedToken (format, token);
 			}
@@ -452,7 +458,23 @@ namespace MailKit.Net.Imap {
 				attrs |= FolderAttributes.Inbox;
 
 			if (engine.GetCachedFolder (encodedName, out folder)) {
-				attrs |= (folder.Attributes & ~(FolderAttributes.Marked | FolderAttributes.Unmarked));
+				if ((attrs & FolderAttributes.NonExistent) != 0) {
+					folder.UpdatePermanentFlags (MessageFlags.None);
+					folder.UpdateAcceptedFlags (MessageFlags.None);
+					folder.UpdateUidNext (UniqueId.Invalid);
+					folder.UpdateHighestModSeq (0);
+					folder.UpdateUidValidity (0);
+					folder.UpdateUnread (0);
+				}
+
+				if (ic.Lsub) {
+					// Note: merge all pre-existing attributes since the LSUB response will not contain them
+					attrs |= folder.Attributes;
+				} else {
+					// Note: only merge the SPECIAL-USE and \Subscribed attributes for a LIST command
+					attrs |= (folder.Attributes & (SpecialUseAttributes | FolderAttributes.Subscribed));
+				}
+
 				folder.UpdateAttributes (attrs);
 			} else {
 				folder = engine.CreateImapFolder (encodedName, attrs, delim);
@@ -645,6 +667,16 @@ namespace MailKit.Net.Imap {
 				throw ImapEngine.UnexpectedToken (format, token);
 
 			var dsp = ReadStringToken (engine, format, cancellationToken);
+
+			// Note: These are work-arounds for some bugs in some mail clients that
+			// either leave out the disposition value or quote it.
+			//
+			// See https://github.com/jstedfast/MailKit/issues/486 for details.
+			if (string.IsNullOrEmpty (dsp))
+				dsp = ContentDisposition.Attachment;
+			else
+				dsp = dsp.Trim ('"');
+
 			var builder = new StringBuilder (dsp);
 			ContentDisposition disposition;
 
@@ -660,8 +692,7 @@ namespace MailKit.Net.Imap {
 			if (token.Type != ImapTokenType.CloseParen)
 				throw ImapEngine.UnexpectedToken (format, token);
 
-			if (!ContentDisposition.TryParse (builder.ToString (), out disposition))
-				disposition = new ContentDisposition (dsp);
+			ContentDisposition.TryParse (builder.ToString (), out disposition);
 
 			return disposition;
 		}
@@ -777,14 +808,16 @@ namespace MailKit.Net.Imap {
 			if (token.Type != ImapTokenType.CloseParen) {
 				token = engine.ReadToken (cancellationToken);
 
-				if (token.Type != ImapTokenType.OpenParen)
+				if (token.Type != ImapTokenType.OpenParen && token.Type != ImapTokenType.Nil)
 					throw ImapEngine.UnexpectedToken (format, token);
 
 				var builder = new StringBuilder ();
 				ContentType contentType;
 
 				builder.AppendFormat ("{0}/{1}", body.ContentType.MediaType, body.ContentType.MediaSubtype);
-				ParseParameterList (builder, engine, format, cancellationToken);
+
+				if (token.Type == ImapTokenType.OpenParen)
+					ParseParameterList (builder, engine, format, cancellationToken);
 
 				if (ContentType.TryParse (builder.ToString (), out contentType))
 					body.ContentType = contentType;
@@ -950,6 +983,7 @@ namespace MailKit.Net.Imap {
 
 			public MailboxAddress ToMailboxAddress ()
 			{
+				var mailbox = Mailbox;
 				var domain = Domain;
 				string name = null;
 
@@ -964,8 +998,13 @@ namespace MailKit.Net.Imap {
 				// appearing as a group address in the IMAP ENVELOPE response.
 				if (domain == "MISSING_DOMAIN")
 					domain = null;
+				else if (domain != null)
+					domain = domain.TrimEnd ('>');
 
-				string address = domain != null ? Mailbox + "@" + domain : Mailbox;
+				if (mailbox != null)
+					mailbox = mailbox.TrimStart ('<');
+
+				string address = domain != null ? mailbox + "@" + domain : Mailbox;
 				DomainList route;
 
 				if (Route != null && DomainList.TryParse (Route, out route))
@@ -1050,10 +1089,23 @@ namespace MailKit.Net.Imap {
 					list.Add (group);
 				} else if (item.IsGroupEnd) {
 					group = null;
-				} else if (group != null) {
-					group.Members.Add (item.ToMailboxAddress ());
 				} else {
-					list.Add (item.ToMailboxAddress ());
+					MailboxAddress mailbox;
+
+					try {
+						// Note: We need to do a try/catch around ToMailboxAddress() because some addresses
+						// returned by the IMAP server might be completely horked. For an example, see the
+						// second error report in https://github.com/jstedfast/MailKit/issues/494 where one
+						// of the addresses in the ENVELOPE has the name and address tokens flipped.
+						mailbox = item.ToMailboxAddress ();
+					} catch {
+						continue;
+					}
+
+					if (group != null)
+						group.Members.Add (mailbox);
+					else
+						list.Add (mailbox);
 				}
 			} while (true);
 		}
@@ -1232,7 +1284,7 @@ namespace MailKit.Net.Imap {
 
 					labels.Add (label);
 				} else {
-					labels.Add (null);
+					labels.Add ("NIL");
 				}
 
 				token = engine.ReadToken (ImapStream.GMailLabelSpecials, cancellationToken);
@@ -1250,7 +1302,7 @@ namespace MailKit.Net.Imap {
 			MessageThread thread, node, child;
 			uint uid;
 
-			if (token.Type != ImapTokenType.Atom || !uint.TryParse ((string) token.Value, out uid))
+			if (token.Type != ImapTokenType.Atom || !uint.TryParse ((string) token.Value, out uid) || uid == 0)
 				throw ImapEngine.UnexpectedToken (ImapEngine.GenericUntaggedResponseSyntaxErrorFormat, "THREAD", token);
 
 			node = thread = new MessageThread (new UniqueId (uidValidity, uid));
@@ -1265,7 +1317,7 @@ namespace MailKit.Net.Imap {
 					child = ParseThread (engine, uidValidity, cancellationToken);
 					node.Children.Add (child);
 				} else {
-					if (token.Type != ImapTokenType.Atom || !uint.TryParse ((string) token.Value, out uid))
+					if (token.Type != ImapTokenType.Atom || !uint.TryParse ((string) token.Value, out uid) || uid == 0)
 						throw ImapEngine.UnexpectedToken (ImapEngine.GenericUntaggedResponseSyntaxErrorFormat, "THREAD", token);
 
 					child = new MessageThread (new UniqueId (uidValidity, uid));

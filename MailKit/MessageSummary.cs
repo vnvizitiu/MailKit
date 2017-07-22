@@ -1,9 +1,9 @@
-﻿//
+//
 // MessageSummary.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -228,11 +228,14 @@ namespace MailKit {
 		/// Gets the text body part of the message if it exists.
 		/// </summary>
 		/// <remarks>
-		/// <para>Gets the text/plain body part of the message.</para>
+		/// <para>Gets the <c>text/plain</c> body part of the message.</para>
 		/// <para>In order for this to work properly, it is necessary to include
 		/// <see cref="MessageSummaryItems.BodyStructure"/> when fetching
 		/// summary information from a <see cref="IMailFolder"/>.</para>
 		/// </remarks>
+		/// <example>
+		/// <code language="c#" source="Examples\ImapExamples.cs" region="DownloadBodyParts"/>
+		/// </example>
 		/// <value>The text body if it exists; otherwise, <c>null</c>.</value>
 		public BodyPartText TextBody {
 			get {
@@ -258,7 +261,7 @@ namespace MailKit {
 		/// Gets the html body part of the message if it exists.
 		/// </summary>
 		/// <remarks>
-		/// <para>Gets the text/html body part of the message.</para>
+		/// <para>Gets the <c>text/html</c> body part of the message.</para>
 		/// <para>In order for this to work properly, it is necessary to include
 		/// <see cref="MessageSummaryItems.BodyStructure"/> when fetching
 		/// summary information from a <see cref="IMailFolder"/>.</para>
@@ -337,12 +340,15 @@ namespace MailKit {
 		/// </summary>
 		/// <remarks>
 		/// <para>Traverses over the <see cref="Body"/>, enumerating all of the
-		/// <see cref="BodyPartBasic"/> objects that have a Content-Disposition
+		/// <see cref="BodyPartBasic"/> objects that have a <c>Content-Disposition</c>
 		/// header set to <c>"attachment"</c>.</para>
 		/// <para>In order for this to work properly, it is necessary to include
 		/// <see cref="MessageSummaryItems.BodyStructure"/> when fetching
 		/// summary information from a <see cref="IMailFolder"/>.</para>
 		/// </remarks>
+		/// <example>
+		/// <code language="c#" source="Examples\ImapExamples.cs" region="DownloadBodyParts"/>
+		/// </example>
 		/// <value>The attachments.</value>
 		public IEnumerable<BodyPartBasic> Attachments {
 			get { return EnumerateBodyParts (Body).Where (part => part.IsAttachment); }
@@ -471,7 +477,7 @@ namespace MailKit {
 		/// <remarks>
 		/// <para>Gets the size of the message, in bytes, if available.</para>
 		/// <para>This property will only be set if the
-		/// <see cref="MessageSummaryItems.MessageSize"/> flag is passed to
+		/// <see cref="MessageSummaryItems.Size"/> flag is passed to
 		/// <see cref="IMailFolder.Fetch(System.Collections.Generic.IList&lt;UniqueId&gt;,MessageSummaryItems,System.Threading.CancellationToken)"/>.</para>
 		/// </remarks>
 		/// <value>The size of the message.</value>

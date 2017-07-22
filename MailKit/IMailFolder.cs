@@ -1,9 +1,9 @@
 //
 // IMailFolder.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1397,6 +1397,9 @@ namespace MailKit {
 		/// messages that were requested as well as summaries for messages that were
 		/// not requested at all.</para>
 		/// </remarks>
+		/// <example>
+		/// <code language="c#" source="Examples\ImapExamples.cs" region="DownloadBodyParts"/>
+		/// </example>
 		/// <returns>An enumeration of summaries for the requested messages.</returns>
 		/// <param name="uids">The UIDs.</param>
 		/// <param name="items">The message summary items to fetch.</param>
@@ -2166,6 +2169,106 @@ namespace MailKit {
 		Task<IList<IMessageSummary>> FetchAsync (int min, int max, ulong modseq, MessageSummaryItems items, HashSet<string> fields, CancellationToken cancellationToken = default (CancellationToken));
 
 		/// <summary>
+		/// Get the specified message headers.
+		/// </summary>
+		/// <remarks>
+		/// Gets the specified message headers.
+		/// </remarks>
+		/// <returns>The message headers.</returns>
+		/// <param name="uid">The UID of the message.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		HeaderList GetHeaders (UniqueId uid, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Asynchronously get the specified message headers.
+		/// </summary>
+		/// <remarks>
+		/// Asynchronously gets the specified message headers.
+		/// </remarks>
+		/// <returns>The message headers.</returns>
+		/// <param name="uid">The UID of the message.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		Task<HeaderList> GetHeadersAsync (UniqueId uid, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Get the specified body part headers.
+		/// </summary>
+		/// <remarks>
+		/// Gets the specified body part headers.
+		/// </remarks>
+		/// <returns>The body part headers.</returns>
+		/// <param name="uid">The UID of the message.</param>
+		/// <param name="part">The body part.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		HeaderList GetHeaders (UniqueId uid, BodyPart part, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Asynchronously get the specified body part headers.
+		/// </summary>
+		/// <remarks>
+		/// Asynchronously gets the specified body part headers.
+		/// </remarks>
+		/// <returns>The body part headers.</returns>
+		/// <param name="uid">The UID of the message.</param>
+		/// <param name="part">The body part.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		Task<HeaderList> GetHeadersAsync (UniqueId uid, BodyPart part, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Get the specified message headers.
+		/// </summary>
+		/// <remarks>
+		/// Gets the specified message headers.
+		/// </remarks>
+		/// <returns>The message headers.</returns>
+		/// <param name="index">The index of the message.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		HeaderList GetHeaders (int index, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Asynchronously get the specified message headers.
+		/// </summary>
+		/// <remarks>
+		/// Asynchronously gets the specified message headers.
+		/// </remarks>
+		/// <returns>The message headers.</returns>
+		/// <param name="index">The index of the message.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		Task<HeaderList> GetHeadersAsync (int index, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Get the specified body part headers.
+		/// </summary>
+		/// <remarks>
+		/// Gets the specified body part headers.
+		/// </remarks>
+		/// <returns>The body part headers.</returns>
+		/// <param name="index">The index of the message.</param>
+		/// <param name="part">The body part.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		HeaderList GetHeaders (int index, BodyPart part, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
+		/// Asynchronously get the specified body part headers.
+		/// </summary>
+		/// <remarks>
+		/// Asynchronously gets the specified body part headers.
+		/// </remarks>
+		/// <returns>The body part headers.</returns>
+		/// <param name="index">The index of the message.</param>
+		/// <param name="part">The body part.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <param name="progress">The progress reporting mechanism.</param>
+		Task<HeaderList> GetHeadersAsync (int index, BodyPart part, CancellationToken cancellationToken = default (CancellationToken), ITransferProgress progress = null);
+
+		/// <summary>
 		/// Get the specified message.
 		/// </summary>
 		/// <remarks>
@@ -2219,6 +2322,9 @@ namespace MailKit {
 		/// <remarks>
 		/// Gets the specified body part.
 		/// </remarks>
+		/// <example>
+		/// <code language="c#" source="Examples\ImapExamples.cs" region="DownloadBodyParts"/>
+		/// </example>
 		/// <returns>The body part.</returns>
 		/// <param name="uid">The UID of the message.</param>
 		/// <param name="part">The body part.</param>

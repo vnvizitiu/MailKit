@@ -11,19 +11,21 @@
 * [How can I log in to a GMail account using OAuth 2.0?](#GMailOAuth2)
 
 ### Messages
-* [How do I create a message with attachments?](#CreateAttachments)
-* [How do I get the main body of a message?](#MessageBody)
-* [How do I tell if a message has attachments?](#HasAttachments)
+* [How can I create a message with attachments?](#CreateAttachments)
+* [How can I get the main body of a message?](#MessageBody)
+* [How can I tell if a message has attachments?](#HasAttachments)
 * [Why doesn't the `MimeMessage` class implement `ISerializable` so that I can serialize a message to disk and read it back later?](#Serialize)
-* [How do I save messages?](#SaveMessages)
-* [How do I save attachments?](#SaveAttachments)
-* [How do I get the email addresses in the From, To, and Cc headers?](#AddressHeaders)
+* [How can I parse messages?](#LoadMessages)
+* [How can I save messages?](#SaveMessages)
+* [How can I save attachments?](#SaveAttachments)
+* [How can I get the email addresses in the From, To, and Cc headers?](#AddressHeaders)
 * [Why do attachments with unicode filenames appear as "ATT0####.dat" in Outlook?](#UntitledAttachments)
-* [How do I decrypt PGP messages that are embedded in the main message text?](#DecryptInlinePGP)
-* [How do I reply to a message?](#Reply)
-* [How do I forward a message?](#Forward)
+* [How can I decrypt PGP messages that are embedded in the main message text?](#DecryptInlinePGP)
+* [How can I reply to a message?](#Reply)
+* [How can I forward a message?](#Forward)
 
 ### ImapClient
+* [How can I get the number of unread messages in a folder?](#ImapUnreadCount)
 * [How can I search for messages delivered between two dates?](#ImapSearchBetween2Dates)
 * [What does "The ImapClient is currently busy processing a command." mean?](#ImapClientBusy)
 * [Why do I get InvalidOperationException: "The folder is not currently open."?](#FolderNotOpenException)
@@ -178,7 +180,7 @@ using (var client = new ImapClient ()) {
 
 ## Messages
 
-### <a name="CreateAttachments">Q: How do I create a message with attachments?</a>
+### <a name="CreateAttachments">Q: How can I create a message with attachments?</a>
 
 To construct a message with attachments, the first thing you'll need to do is create a `multipart/mixed`
 container which you'll then want to add the message body to first. Once you've added the body, you can
@@ -258,7 +260,7 @@ message.Body = builder.ToMessageBody ();
 
 For more information, see [Creating Messages](http://www.mimekit.net/docs/html/CreatingMessages.htm).
 
-### <a name="MessageBody">Q: How do I get the main body of a message?</a>
+### <a name="MessageBody">Q: How can I get the main body of a message?</a>
 
 (Note: for the TL;DR version, skip to [the end](#MessageBodyTLDR))
 
@@ -335,7 +337,7 @@ Likewise, the `TextBody` property can be used to get the `text/plain` version of
 
 For more information, see [Working with Messages](http://www.mimekit.net/docs/html/WorkingWithMessages.htm).
 
-### <a name="HasAttachments">Q: How do I tell if a message has attachments?</a>
+### <a name="HasAttachments">Q: How can I tell if a message has attachments?</a>
 
 In most cases, a message with a body that has a MIME-type of `multipart/mixed` containing more than a
 single part probably has attachments. As illustrated above, the first part of a `multipart/mixed` is
@@ -586,9 +588,54 @@ to use the .NET serialization API and format did not make much sense to support.
 You can easily serialize a [MimeMessage](http://www.mimekit.net/docs/html/T_MimeKit_MimeMessage.htm) to a stream using the
 [WriteTo](http://www.mimekit.net/docs/html/Overload_MimeKit_MimeMessage_WriteTo.htm) methods.
 
-For more information on this topic, see: <a href="#SaveMessages">How do I save messages?</a>
+For more information on this topic, see the following other two topics:
 
-### <a name="SaveMessages">Q: How do I save messages?</a>
+* <a href="#LoadMessages">How can I parse messages?</a>
+* <a href="#SaveMessages">How can I save messages?</a>
+
+### <a name="LoadMessages">Q: How can I parse messages?</a>
+
+One of the more common operations that MimeKit is meant for is parsing email messages from arbitrary streams.
+There are two ways of accomplishing this task.
+
+The first way is to use one of the [Load](http://www.mimekit.net/docs/html/Overload_MimeKit_MimeMessage_Load.htm) methods
+on `MimeMessage`:
+
+```csharp
+// Load a MimeMessage from a stream
+var message = MimeMessage.Load (stream);
+```
+
+Or you can load a message from a file path:
+
+```csharp
+// Load a MimeMessage from a file path
+var message = MimeMessage.Load ("message.eml");
+```
+
+The second way is to use the [MimeParser](http://www.mimekit.net/docs/html/T_MimeKit_MimeParser.htm) class. For the most
+part, using the `MimeParser` directly is not necessary unless you wish to parse a Unix mbox file stream. However, this is
+how you would do it:
+
+```csharp
+// Load a MimeMessage from a stream
+var parser = new MimeParser (stream, MimeFormat.Entity);
+var message = parser.ParseMessage ();
+```
+
+For Unix mbox file streams, you would use the parser like this:
+
+```csharp
+// Load every message from a Unix mbox
+var parser = new MimeParser (stream, MimeFormat.Mbox);
+while (!parser.IsEndOfStream) {
+    var message = parser.ParseMessage ();
+
+    // do something with the message
+}
+```
+
+### <a name="SaveMessages">Q: How can I save messages?</a>
 
 One you've got a [MimeMessage](http://www.mimekit.net/docs/html/T_MimeKit_MimeMessage.htm), you can save
 it to a file using the [WriteTo](http://mimekit.net/docs/html/Overload_MimeKit_MimeMessage_WriteTo.htm) method:
@@ -614,7 +661,13 @@ format.NewLineFormat = NewLineFormat.Dos;
 message.WriteTo (format, "message.eml");
 ```
 
-### <a name="SaveAttachments">Q: How do I save attachments?</a>
+Note: While it may seem like you can safely use the `ToString` method to serialize a message,
+***DON'T DO IT!*** This is ***not*** safe! MIME messages cannot be accurately represented as
+strings due to the fact that each MIME part of the message *may* be encoded in a different
+character set, thus making it impossible to convert the message into a unicode string using a
+single charset to do the conversion (which is *exactly* what `ToString` does).
+
+### <a name="SaveAttachments">Q: How can I save attachments?</a>
 
 If you've already got a [MimePart](http://www.mimekit.net/docs/html/T_MimeKit_MimePart.htm) that represents
 the attachment that you'd like to save, here's how you might save it:
@@ -655,7 +708,7 @@ foreach (var attachment in message.Attachments) {
 }
 ```
 
-### <a name="AddressHeaders">Q: How do I get the email addresses in the From, To, and Cc headers?</a>
+### <a name="AddressHeaders">Q: How can I get the email addresses in the From, To, and Cc headers?</a>
 
 The [From](http://www.mimekit.net/docs/html/P_MimeKit_MimeMessage_From.htm), 
 [To](http://www.mimekit.net/docs/html/P_MimeKit_MimeMessage_To.htm), and 
@@ -750,7 +803,7 @@ options.ParameterEncodingMethod = ParameterEncodingMethod.Rfc2047;
 message.WriteTo (options, stream);
 ```
 
-### <a name="DecryptInlinePGP">Q: How do I decrypt PGP messages that are embedded in the main message text?</a>
+### <a name="DecryptInlinePGP">Q: How can I decrypt PGP messages that are embedded in the main message text?</a>
 
 Some PGP-enabled mail clients, such as Thunderbird, embed encrypted PGP blurbs within the `text/plain` body
 of the message rather than using the PGP/MIME format that MimeKit prefers.
@@ -828,7 +881,7 @@ static Stream DecryptEmbeddedPgp (TextPart text)
 What you do with that decrypted stream is up to you. It's up to you to figure out what the decrypted content is
 (is it text? a jpeg image? a video?) and how to display it to the user.
 
-### <a name="Reply">Q: How do I reply to a message?</a>
+### <a name="Reply">Q: How can I reply to a message?</a>
 
 Replying to a message is fairly simple. For the most part, you'd just create the reply message
 the same way you'd create any other message. There are only a few slight differences:
@@ -1156,7 +1209,7 @@ public static MimeMessage Reply (MimeMessage message, MailboxAddress from, bool 
 }
 ```
 
-### <a name="Forward">Q: How do I forward a message?</a>
+### <a name="Forward">Q: How can I forward a message?</a>
 
 There are 2 common ways of forwarding a message: attaching the original message as an attachment and inlining
 the message body much like replying typically does. Which method you choose is up to you.
@@ -1171,8 +1224,8 @@ public static MimeMessage Forward (MimeMessage original, MailboxAddress from, IE
 	message.To.AddRange (to);
 
 	// set the forwarded subject
-	if (!original.Subject.StartsWith ("FWD:", StringComparison.OrdinalIgnoreCase))
-		message.Subject = "FWD: " + original.Subject;
+	if (!original.Subject.StartsWith ("FW:", StringComparison.OrdinalIgnoreCase))
+		message.Subject = "FW: " + original.Subject;
 	else
 		message.Subject = original.Subject;
 
@@ -1204,8 +1257,8 @@ public static MimeMessage Forward (MimeMessage original, MailboxAddress from, IE
 	message.To.AddRange (to);
 
 	// set the forwarded subject
-	if (!original.Subject.StartsWith ("FWD:", StringComparison.OrdinalIgnoreCase))
-		message.Subject = "FWD: " + original.Subject;
+	if (!original.Subject.StartsWith ("FW:", StringComparison.OrdinalIgnoreCase))
+		message.Subject = "FW: " + original.Subject;
 	else
 		message.Subject = original.Subject;
 
@@ -1233,6 +1286,25 @@ public static MimeMessage Forward (MimeMessage original, MailboxAddress from, IE
 Keep in mind that not all messages will have a `TextBody` available, so you'll have to find a way to handle those cases.
 
 ## ImapClient
+
+### <a name="ImapUnreadCount">Q: How can I get the number of unread messages in a folder?</a>
+
+If the folder is open (via [Open](http://www.mimekit.net/docs/html/Overload_MailKit_Net_Imap_ImapFolder_Open.htm)),
+then the [ImapFolder.Unread](http://www.mimekit.net/docs/html/P_MailKit_MailFolder_Unread.htm) property will be kept
+up to date (at least as-of the latest command issued to the server).
+
+If the folder *isn't* open, then you will need to query the unread state of the folder using the
+[Status](http://www.mimekit.net/docs/html/M_MailKit_Net_Imap_ImapFolder_Status.htm) method with the
+appropriate [StatusItems](http://www.mimekit.net/docs/html/T_MailKit_StatusItems.htm) flag(s).
+
+For example, to get the total *and* unread counts, you can do this:
+
+```csharp
+folder.Status (StatusItems.Count | StatusItems.Unread);
+
+int total = folder.Count;
+int unread = folder.Unread;
+```
 
 ### <a name="ImapSearchBetween2Dates">Q: How can I search for messages delivered between two dates?</a>
 

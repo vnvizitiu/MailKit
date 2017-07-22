@@ -1,9 +1,9 @@
-﻿//
+//
 // UniqueIdRangeTests.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,12 @@ namespace UnitTests {
 		{
 			var uids = new UniqueIdRange (UniqueId.MinValue, UniqueId.MinValue);
 			UniqueId uid;
+
+			Assert.Throws<ArgumentOutOfRangeException> (() => new UniqueIdRange (UniqueId.Invalid, UniqueId.MaxValue));
+			Assert.Throws<ArgumentOutOfRangeException> (() => new UniqueIdRange (UniqueId.MinValue, UniqueId.Invalid));
+
+			Assert.Throws<ArgumentOutOfRangeException> (() => new UniqueIdRange (0, 0, 1));
+			Assert.Throws<ArgumentOutOfRangeException> (() => new UniqueIdRange (0, 1, 0));
 
 			Assert.Throws<ArgumentNullException> (() => uids.CopyTo (null, 0));
 			Assert.Throws<ArgumentOutOfRangeException> (() => uids.CopyTo (new UniqueId[1], -1));

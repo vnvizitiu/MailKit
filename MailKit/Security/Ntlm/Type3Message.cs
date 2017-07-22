@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2003 Motus Technologies Inc. (http://www.motus.com)
 // Copyright (c) 2004 Novell, Inc (http://www.novell.com)
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // References
 // a.	NTLM Authentication Scheme for HTTP, Ronald Tschalär
@@ -62,9 +62,9 @@ namespace MailKit.Security.Ntlm {
 			Level = NtlmSettings.DefaultAuthLevel;
 
 			challenge = (byte[]) type2.Nonce.Clone ();
-			domain = type2.TargetName;
+			Domain = type2.TargetName;
 			Username = userName;
-			host = hostName;
+			Host = hostName;
 
 			Flags = (NtlmFlags) 0x8200;
 			if ((type2.Flags & NtlmFlags.NegotiateUnicode) != 0)
@@ -159,7 +159,7 @@ namespace MailKit.Security.Ntlm {
 			int ntOffset = BitConverterLE.ToUInt16 (message, startIndex + 24);
 			NT = new byte[ntLength];
 			Buffer.BlockCopy (message, startIndex + ntOffset, NT, 0, ntLength);
-			
+
 			int domainLength = BitConverterLE.ToUInt16 (message, startIndex + 28);
 			int domainOffset = BitConverterLE.ToUInt16 (message, startIndex + 32);
 			domain = DecodeString (message, startIndex + domainOffset, domainLength);
@@ -167,11 +167,11 @@ namespace MailKit.Security.Ntlm {
 			int userLength = BitConverterLE.ToUInt16 (message, startIndex + 36);
 			int userOffset = BitConverterLE.ToUInt16 (message, startIndex + 40);
 			Username = DecodeString (message, startIndex + userOffset, userLength);
-			
+
 			int hostLength = BitConverterLE.ToUInt16 (message, startIndex + 44);
 			int hostOffset = BitConverterLE.ToUInt16 (message, startIndex + 48);
 			host = DecodeString (message, startIndex + hostOffset, hostLength);
-			
+
 			// Session key.  We don't use it yet.
 			// int skeyLength = BitConverterLE.ToUInt16 (message, startIndex + 52);
 			// int skeyOffset = BitConverterLE.ToUInt16 (message, startIndex + 56);

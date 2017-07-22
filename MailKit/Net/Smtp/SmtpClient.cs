@@ -1,9 +1,9 @@
 //
 // SmtpClient.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ using System.Net;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Globalization;
 using System.Collections.Generic;
 
 using MimeKit;
@@ -103,7 +104,6 @@ namespace MailKit.Net.Smtp {
 		/// </example>
 		public SmtpClient () : this (new NullProtocolLogger ())
 		{
-			QueryCapabilitiesAfterAuthenticating = true;
 		}
 
 		/// <summary>
@@ -125,7 +125,6 @@ namespace MailKit.Net.Smtp {
 		/// </example>
 		public SmtpClient (IProtocolLogger protocolLogger) : base (protocolLogger)
 		{
-			QueryCapabilitiesAfterAuthenticating = true;
 		}
 
 		/// <summary>
@@ -139,6 +138,7 @@ namespace MailKit.Net.Smtp {
 		/// the capabilities after successfully authenticating, the default is <c>true</c>.</para>
 		/// </remarks>
 		/// <value><c>true</c> if the capabilities should be re-queried after authenticating; otherwise, <c>false</c>.</value>
+		[Obsolete ("This property is no longer needed.")]
 		public bool QueryCapabilitiesAfterAuthenticating {
 			get; set;
 		}
@@ -330,7 +330,7 @@ namespace MailKit.Net.Smtp {
 			if (ServerCertificateValidationCallback != null)
 				return ServerCertificateValidationCallback (host, certificate, chain, sslPolicyErrors);
 
-#if !COREFX
+#if !NETSTANDARD
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 				return ServicePointManager.ServerCertificateValidationCallback (host, certificate, chain, sslPolicyErrors);
 #endif
@@ -363,13 +363,10 @@ namespace MailKit.Net.Smtp {
 
 		void FlushCommandQueue (MimeMessage message, MailboxAddress sender, IList<MailboxAddress> recipients, CancellationToken cancellationToken)
 		{
-			if (queued.Count == 0)
-				return;
-
 			try {
 				var responses = new List<SmtpResponse> ();
 				Exception rex = null;
-				int count = 0;
+				int accepted = 0;
 				int rcpt = 0;
 
 				// Note: queued commands are buffered by the stream
@@ -393,12 +390,12 @@ namespace MailKit.Net.Smtp {
 						break;
 					case SmtpCommand.RcptTo:
 						if (ProcessRcptToResponse (message, recipients[rcpt++], responses[i]))
-							count++;
+							accepted++;
 						break;
 					}
 				}
 
-				if (count == 0)
+				if (accepted == 0)
 					OnNoRecipientsAccepted (message);
 
 				if (rex != null)
@@ -639,7 +636,7 @@ namespace MailKit.Net.Smtp {
 				try {
 					while (!sasl.IsAuthenticated) {
 						if (response.StatusCode != SmtpStatusCode.AuthenticationChallenge)
-							throw new SmtpCommandException (SmtpErrorCode.UnexpectedStatusCode, response.StatusCode, response.Response);
+							break;
 
 						challenge = sasl.Challenge (response.Response);
 						response = SendCommand (challenge, cancellationToken);
@@ -653,7 +650,7 @@ namespace MailKit.Net.Smtp {
 				}
 
 				if (response.StatusCode == SmtpStatusCode.AuthenticationSuccessful) {
-					if (QueryCapabilitiesAfterAuthenticating)
+					if (sasl.NegotiatedSecurityLayer)
 						Ehlo (cancellationToken);
 					authenticated = true;
 					OnAuthenticated (response.Response);
@@ -847,7 +844,7 @@ namespace MailKit.Net.Smtp {
 			ComputeDefaultValues (host, ref port, ref options, out uri, out starttls);
 
 #if !NETFX_CORE
-#if COREFX
+#if NETSTANDARD
 			var ipAddresses = Dns.GetHostAddressesAsync (uri.DnsSafeHost).GetAwaiter ().GetResult ();
 #else
 			var ipAddresses = Dns.GetHostAddresses (uri.DnsSafeHost);
@@ -887,10 +884,10 @@ namespace MailKit.Net.Smtp {
 				var ssl = new SslStream (new NetworkStream (socket, true), false, ValidateRemoteCertificate);
 
 				try {
-#if COREFX
-					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 				} catch {
 					ssl.Dispose ();
@@ -952,10 +949,10 @@ namespace MailKit.Net.Smtp {
 
 #if !NETFX_CORE
 					var tls = new SslStream (stream, false, ValidateRemoteCertificate);
-#if COREFX
-					tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+					tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-					tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+					tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 					Stream.Stream = tls;
 #else
@@ -1089,10 +1086,10 @@ namespace MailKit.Net.Smtp {
 				var ssl = new SslStream (new NetworkStream (socket, true), false, ValidateRemoteCertificate);
 
 				try {
-#if COREFX
-					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 				} catch {
 					ssl.Dispose ();
@@ -1134,10 +1131,10 @@ namespace MailKit.Net.Smtp {
 						throw new SmtpCommandException (SmtpErrorCode.UnexpectedStatusCode, response.StatusCode, response.Response);
 
 					var tls = new SslStream (stream, false, ValidateRemoteCertificate);
-#if COREFX
-					tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+					tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-					tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+					tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 					Stream.Stream = tls;
 
@@ -1403,10 +1400,20 @@ namespace MailKit.Net.Smtp {
 			return null;
 		}
 
-		void MailFrom (MimeMessage message, MailboxAddress mailbox, SmtpExtension extensions, CancellationToken cancellationToken)
+		static string GetAddrspec (FormatOptions options, MailboxAddress mailbox)
+		{
+			if (options.International)
+				return MailboxAddress.DecodeAddrspec (mailbox.Address);
+
+			return MailboxAddress.EncodeAddrspec (mailbox.Address);
+		}
+
+		void MailFrom (FormatOptions options, MimeMessage message, MailboxAddress mailbox, SmtpExtension extensions, CancellationToken cancellationToken)
 		{
 			var utf8 = (extensions & SmtpExtension.UTF8) != 0 ? " SMTPUTF8" : string.Empty;
-			var command = string.Format ("MAIL FROM:<{0}>{1}", mailbox.Address, utf8);
+			var addrspec = GetAddrspec (options, mailbox);
+
+			var command = string.Format ("MAIL FROM:<{0}>{1}", addrspec, utf8);
 
 			if ((extensions & SmtpExtension.BinaryMime) != 0)
 				command += " BODY=BINARYMIME";
@@ -1515,9 +1522,9 @@ namespace MailKit.Net.Smtp {
 			return value.TrimEnd (',');
 		}
 
-		void RcptTo (MimeMessage message, MailboxAddress mailbox, CancellationToken cancellationToken)
+		bool RcptTo (FormatOptions options, MimeMessage message, MailboxAddress mailbox, CancellationToken cancellationToken)
 		{
-			var command = string.Format ("RCPT TO:<{0}>", mailbox.Address);
+			var command = string.Format ("RCPT TO:<{0}>", GetAddrspec (options, mailbox));
 
 			if ((capabilities & SmtpCapabilities.Dsn) != 0) {
 				var notify = GetDeliveryStatusNotifications (message, mailbox);
@@ -1528,12 +1535,12 @@ namespace MailKit.Net.Smtp {
 
 			if ((capabilities & SmtpCapabilities.Pipelining) != 0) {
 				QueueCommand (SmtpCommand.RcptTo, command, cancellationToken);
-				return;
+				return false;
 			}
 
 			var response = SendCommand (command, cancellationToken);
 
-			ProcessRcptToResponse (message, mailbox, response);
+			return ProcessRcptToResponse (message, mailbox, response);
 		}
 
 		class SendContext
@@ -1661,14 +1668,13 @@ namespace MailKit.Net.Smtp {
 				throw new ServiceNotConnectedException ("The SmtpClient is not connected.");
 
 			var format = options.Clone ();
-			format.International = format.International || sender.IsInternational || recipients.Any (x => x.IsInternational);
 			format.HiddenHeaders.Add (HeaderId.ContentLength);
 			format.HiddenHeaders.Add (HeaderId.ResentBcc);
 			format.HiddenHeaders.Add (HeaderId.Bcc);
 			format.NewLineFormat = NewLineFormat.Dos;
 
 			if (format.International && (Capabilities & SmtpCapabilities.UTF8) == 0)
-				throw new NotSupportedException ("The SMTP server does not support the SMTPUTF8 extension.");
+				format.International = false;
 
 			if (format.International && (Capabilities & SmtpCapabilities.EightBitMime) == 0)
 				throw new NotSupportedException ("The SMTP server does not support the 8BITMIME extension.");
@@ -1693,15 +1699,22 @@ namespace MailKit.Net.Smtp {
 			try {
 				// Note: if PIPELINING is supported, MailFrom() and RcptTo() will
 				// queue their commands instead of sending them immediately.
-				MailFrom (message, sender, extensions, cancellationToken);
+				MailFrom (format, message, sender, extensions, cancellationToken);
 
-				for (int i = 0; i < recipients.Count; i++)
-					RcptTo (message, recipients[i], cancellationToken);
+				int accepted = 0;
+				for (int i = 0; i < recipients.Count; i++) {
+					if (RcptTo (format, message, recipients[i], cancellationToken))
+						accepted++;
+				}
 
-				// Note: if PIPELINING is supported, this will flush all outstanding
-				// MAIL FROM and RCPT TO commands to the server and then process all
-				// of their responses.
-				FlushCommandQueue (message, sender, recipients, cancellationToken);
+				if (queued.Count > 0) {
+					// Note: if PIPELINING is supported, this will flush all outstanding
+					// MAIL FROM and RCPT TO commands to the server and then process all
+					// of their responses.
+					FlushCommandQueue (message, sender, recipients, cancellationToken);
+				} else if (accepted == 0) {
+					OnNoRecipientsAccepted (message);
+				}
 
 				if ((extensions & SmtpExtension.BinaryMime) != 0)
 					Bdat (format, message, cancellationToken, progress);

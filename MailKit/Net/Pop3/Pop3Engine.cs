@@ -1,9 +1,9 @@
 //
 // Pop3Engine.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -252,10 +252,14 @@ namespace MailKit.Net.Pop3 {
 				throw new Pop3ProtocolException (string.Format ("Unexpected greeting from server: {0}", greeting));
 			}
 
-			index = text.IndexOf ('>');
-			if (text.Length > 0 && text[0] == '<' && index != -1) {
-				ApopToken = text.Substring (0, index + 1);
-				Capabilities |= Pop3Capabilities.Apop;
+			index = text.IndexOf ('<');
+			if (index != -1 && index + 1 < text.Length) {
+				int endIndex = text.IndexOf ('>', index + 1);
+
+				if (endIndex++ != -1) {
+					ApopToken = text.Substring (index, endIndex - index);
+					Capabilities |= Pop3Capabilities.Apop;
+				}
 			}
 
 			State = Pop3EngineState.Connected;
@@ -321,7 +325,7 @@ namespace MailKit.Net.Pop3 {
 				memory.Write (buf, offset, count);
 
 				count = (int) memory.Length;
-#if !NETFX_CORE && !COREFX
+#if !NETFX_CORE && !NETSTANDARD
 				buf = memory.GetBuffer ();
 #else
 				buf = memory.ToArray ();

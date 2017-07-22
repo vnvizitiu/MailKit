@@ -1,9 +1,9 @@
-﻿//
+//
 // UniqueIdTests.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,8 @@
 // THE SOFTWARE.
 //
 
+using System;
+
 using NUnit.Framework;
 
 using MailKit;
@@ -32,6 +34,13 @@ namespace UnitTests {
 	[TestFixture]
 	public class UniqueIdTests
 	{
+		[Test]
+		public void TestArgumentExceptions ()
+		{
+			Assert.Throws<ArgumentOutOfRangeException> (() => new UniqueId (0, 0));
+			Assert.Throws<ArgumentOutOfRangeException> (() => new UniqueId (0));
+		}
+
 		[Test]
 		public void TestEquality ()
 		{

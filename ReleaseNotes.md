@@ -1,5 +1,42 @@
 # Release Notes
 
+### MailKit 1.16.2
+
+* Added a leaveOpen param to the ProtocolLogger .ctor. (issue #506)
+* Added a CheckCertificateRevocation property on MailService. (issue #520)
+* Fixed ImapFolder to update the Count property and emit CountChanged when the IMAP server sends
+  an untagged VANISHED response. (issue #521)
+* Fixed ImapEngine to properly handle converting character tokens into strings. (issue #522)
+* Fixed SmtpClient to properly handle DIGEST-MD5 auth errors in order to fall back to the next
+  authentication mechanism.
+* Fixed Pop3Client to properly detect APOP tokens after arbitrary text. (issue #529)
+* Disabled NTLM authentication since it often doesn't work properly. (issue #532)
+
+### MailKit 1.16.1
+
+* Properly handle a NIL body-fld-params token for body-part-mpart. (issue #503)
+
+### MailKit 1.16.0
+
+* Improved IMAP ENVELOPE parser to prevent exceptions when parsing invalid mailbox addresses. (issue #494)
+* Fixed UniqueId and UniqueIdRange to prevent developers from creating invalid UIDs and ranges.
+* Fixed ImapFolder.FetchStream() to properly emit MODSEQ changes if the server sends them.
+* Fixed SmtpClient to call OnNoRecipientsAccepted even in the non-PIPELINE case. (issue #491)
+
+### MailKit 1.14.0
+
+* Improved IMAP's BODYSTRUCTURE parser to sanitize the Content-Disposition values. (issue #486)
+* Improved robustness of IMAP's BODYSTRUCTURE parser in cases where qstring tokens have unescaped
+  quotes. (issue #485)
+* Fixed IMAP to properly handle NIL as a folder name in LIST, LSUB and STATUS responses. (issue #482)
+* Added ImapFolder.GetHeaders() to allow developers to download the entire set of message headers.
+* Added SMTP support for International Domain Names in email addresses used in the MAIL FROM and
+  RCPT TO commands.
+* Modified SmtpClient to no longer throw a NotSupportedException when trying to send messages to
+  a recipient with a unicode local-part in the email address when the SMTP server does not support
+  the SMTPUTF8 extension. Instead, the local-part is passed through as UTF-8, leaving it up to the
+  server to reject either the command or the message. This seems to provide the best interoperability.
+
 ### MailKit 1.12.0
 
 * Allow an empty string text argument for SearchQuery.ContainsHeader(). (issue #451)

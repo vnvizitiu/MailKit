@@ -1,9 +1,9 @@
 //
 // ImapCommandException.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -53,16 +53,14 @@ namespace MailKit.Net.Imap {
 		/// </remarks>
 		/// <param name="info">The serialization info.</param>
 		/// <param name="context">The streaming context.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <paramref name="info"/> is <c>null</c>.
+		/// </exception>
 		[SecuritySafeCritical]
 		protected ImapCommandException (SerializationInfo info, StreamingContext context) : base (info, context)
 		{
-			var value = info.GetString ("Response");
-			ImapCommandResponse response;
-
-			Enum.TryParse (value, out response);
-
+			Response = (ImapCommandResponse) info.GetValue ("Response", typeof (ImapCommandResponse));
 			ResponseText = info.GetString ("ResponseText");
-			Response = response;
 		}
 #endif
 
@@ -184,7 +182,7 @@ namespace MailKit.Net.Imap {
 		{
 			base.GetObjectData (info, context);
 
-			info.AddValue ("Response", Response);
+			info.AddValue ("Response", Response, typeof (ImapCommandResponse));
 			info.AddValue ("ResponseText", ResponseText);
 		}
 #endif

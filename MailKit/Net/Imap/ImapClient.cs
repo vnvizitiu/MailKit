@@ -1,9 +1,9 @@
-﻿//
+//
 // ImapClient.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -59,6 +59,9 @@ namespace MailKit.Net.Imap {
 	/// </remarks>
 	/// <example>
 	/// <code language="c#" source="Examples\ImapExamples.cs" region="DownloadMessages"/>
+	/// </example>
+	/// <example>
+	/// <code language="c#" source="Examples\ImapExamples.cs" region="DownloadBodyParts"/>
 	/// </example>
 	public class ImapClient : MailStore
 	{
@@ -251,7 +254,7 @@ namespace MailKit.Net.Imap {
 			if (ServerCertificateValidationCallback != null)
 				return ServerCertificateValidationCallback (engine.Uri.Host, certificate, chain, sslPolicyErrors);
 
-#if !COREFX
+#if !NETSTANDARD
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 				return ServicePointManager.ServerCertificateValidationCallback (engine.Uri.Host, certificate, chain, sslPolicyErrors);
 #endif
@@ -1245,7 +1248,7 @@ namespace MailKit.Net.Imap {
 			ComputeDefaultValues (host, ref port, ref options, out uri, out starttls);
 
 #if !NETFX_CORE
-#if COREFX
+#if NETSTANDARD
 			var ipAddresses = Dns.GetHostAddressesAsync (uri.DnsSafeHost).GetAwaiter ().GetResult ();
 #else
 			var ipAddresses = Dns.GetHostAddresses (uri.DnsSafeHost);
@@ -1283,10 +1286,10 @@ namespace MailKit.Net.Imap {
 				var ssl = new SslStream (new NetworkStream (socket, true), false, ValidateRemoteCertificate);
 
 				try {
-#if COREFX
-					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 				} catch {
 					ssl.Dispose ();
@@ -1347,10 +1350,10 @@ namespace MailKit.Net.Imap {
 					if (ic.Response == ImapCommandResponse.Ok) {
 #if !NETFX_CORE
 						var tls = new SslStream (stream, false, ValidateRemoteCertificate);
-#if COREFX
-						tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+						tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-						tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+						tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 						engine.Stream.Stream = tls;
 #else
@@ -1473,10 +1476,10 @@ namespace MailKit.Net.Imap {
 				var ssl = new SslStream (new NetworkStream (socket, true), false, ValidateRemoteCertificate);
 
 				try {
-#if COREFX
-					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+					ssl.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+					ssl.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 				} catch {
 					ssl.Dispose ();
@@ -1516,10 +1519,10 @@ namespace MailKit.Net.Imap {
 
 					if (ic.Response == ImapCommandResponse.Ok) {
 						var tls = new SslStream (stream, false, ValidateRemoteCertificate);
-#if COREFX
-						tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, true).GetAwaiter ().GetResult ();
+#if NETSTANDARD
+						tls.AuthenticateAsClientAsync (host, ClientCertificates, SslProtocols, CheckCertificateRevocation).GetAwaiter ().GetResult ();
 #else
-						tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, true);
+						tls.AuthenticateAsClient (host, ClientCertificates, SslProtocols, CheckCertificateRevocation);
 #endif
 						engine.Stream.Stream = tls;
 

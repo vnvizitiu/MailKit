@@ -1,9 +1,9 @@
 //
 // IMailService.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -72,12 +72,24 @@ namespace MailKit {
 		X509CertificateCollection ClientCertificates { get; set; }
 
 		/// <summary>
+		/// Get or set whether connecting via SSL/TLS should check certificate revocation.
+		/// </summary>
+		/// <remarks>
+		/// Gets or sets whether connecting via SSL/TLS should check certificate revocation.
+		/// </remarks>
+		/// <value><c>true</c> certificate revocation should be checked; otherwise, <c>false</c>.</value>
+		bool CheckCertificateRevocation { get; set; }
+
+		/// <summary>
 		/// Get or sets a callback function to validate the server certificate.
 		/// </summary>
 		/// <remarks>
 		/// <para>Gets or sets a callback function to validate the server certificate.</para>
 		/// <para>This property should be set before calling <see cref="Connect(string,int,SecureSocketOptions,CancellationToken)"/>.</para>
 		/// </remarks>
+		/// <example>
+		/// <code language="c#" source="Examples\InvalidSslCertificate.cs" region="Simple"/>
+		/// </example>
 		/// <value>The server certificate validation callback function.</value>
 		RemoteCertificateValidationCallback ServerCertificateValidationCallback { get; set; }
 

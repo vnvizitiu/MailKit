@@ -1,9 +1,9 @@
-﻿//
+//
 // MailService.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,7 @@ namespace MailKit {
 
 #if !NETFX_CORE
 			SslProtocols = DefaultSslProtocols;
+			CheckCertificateRevocation = true;
 #endif
 			ProtocolLogger = protocolLogger;
 		}
@@ -85,6 +86,9 @@ namespace MailKit {
 		/// </remarks>
 		protected MailService () : this (new NullProtocolLogger ())
 		{
+#if !NETFX_CORE
+            CheckCertificateRevocation = true;
+#endif
 		}
 
 		/// <summary>
@@ -164,6 +168,17 @@ namespace MailKit {
 		}
 
 		/// <summary>
+		/// Get or set whether connecting via SSL/TLS should check certificate revocation.
+		/// </summary>
+		/// <remarks>
+		/// Gets or sets whether connecting via SSL/TLS should check certificate revocation.
+		/// </remarks>
+		/// <value><c>true</c> certificate revocation should be checked; otherwise, <c>false</c>.</value>
+		public bool CheckCertificateRevocation {
+			get; set;
+		}
+
+		/// <summary>
 		/// Get or sets a callback function to validate the server certificate.
 		/// </summary>
 		/// <remarks>
@@ -171,6 +186,9 @@ namespace MailKit {
 		/// <para>This property should be set before calling any of the
 		/// <a href="Overload_MailKit_MailService_Connect.htm">Connect</a> methods.</para>
 		/// </remarks>
+		/// <example>
+		/// <code language="c#" source="Examples\InvalidSslCertificate.cs" region="Simple"/>
+		/// </example>
 		/// <value>The server certificate validation callback function.</value>
 		public RemoteCertificateValidationCallback ServerCertificateValidationCallback {
 			get; set;

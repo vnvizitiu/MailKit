@@ -1,9 +1,9 @@
 //
 // SaslMechanism.cs
 //
-// Author: Jeffrey Stedfast <jeff@xamarin.com>
+// Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2016 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@ namespace MailKit.Security {
 		/// which order the SASL mechanisms supported by the server should be tried.
 		/// </remarks>
 		public static readonly string[] AuthMechanismRank = {
-			"XOAUTH2", "SCRAM-SHA-256", "SCRAM-SHA-1", "NTLM", "CRAM-MD5", "DIGEST-MD5", "PLAIN", "LOGIN"
+			"XOAUTH2", "SCRAM-SHA-256", "SCRAM-SHA-1", "CRAM-MD5", "DIGEST-MD5", "PLAIN", "LOGIN"
 		};
 
 		/// <summary>
@@ -123,6 +123,19 @@ namespace MailKit.Security {
 		/// <value><c>true</c> if the SASL mechanism has finished authenticating; otherwise, <c>false</c>.</value>
 		public bool IsAuthenticated {
 			get; protected set;
+		}
+
+		/// <summary>
+		/// Gets whether or not a security layer was negotiated.
+		/// </summary>
+		/// <remarks>
+		/// <para>Gets whether or not a security layer has been negotiated by the SASL mechanism.</para>
+		/// <note type="note">Some SASL mechanisms, such as GSSAPI, are able to negotiate security layers
+		/// such as integrity and confidentiality protection.</note>
+		/// </remarks>
+		/// <value><c>true</c> if a security layer was negotiated; otherwise, <c>false</c>.</value>
+		public virtual bool NegotiatedSecurityLayer {
+			get { return false; }
 		}
 
 		/// <summary>
@@ -480,7 +493,7 @@ namespace MailKit.Security {
 				}
 			}
 
-#if !NETFX_CORE && !COREFX
+#if !NETFX_CORE && !NETSTANDARD
 			return builder.ToString ().Normalize (NormalizationForm.FormKC);
 #else
 			return builder.ToString ();
