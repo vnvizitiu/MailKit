@@ -1,5 +1,76 @@
 # Release Notes
 
+### MailKit 2.0.1
+
+* Obsoleted all SaslMechanism constructors that took a Uri argument and replaced them
+  with variants that no longer require the Uri and instead take a NetworkCredential
+  or a set of strings for the user name and password. This simplifies authenticating
+  with OAuth 2.0:
+
+```csharp
+var oauth2 = new SaslMechanismOAuth2 (username, auth_token);
+
+client.Authenticate (oauth2);
+```
+
+### MailKit 2.0.0
+
+* Updated MailKit to fully support async IO instead of using Task.Run() wrappers.
+* Fixed a resource leak when fetching IMAP body parts gets an exception.
+* Fixed each of the Client.Connect() implementtions to catch exceptions thrown by
+  IProtocolLogger.LogConnect().
+* Removed the ImapFolder.MessagesArrived event.
+* Added new Authenticate() methods that take a SaslMechanism to avoid the need to
+  manipulate Client.AuthenticationMechanisms in order to tweak which SASL mechanisms
+  you'd like the client to use in Authenticate().
+* Added new SslHandshakeException with a helpful error message that can be thrown by
+  the Connect() methods. This replaces the obscure SocketExceptions previously thrown
+  by SslStream.
+* Fixed support for the IMAP UTF8=ACCEPT extension.
+* Improved ImapFolder.CommitStream() API to provide section, offset and length.
+* Treat the SMTP X-EXPS capability in an EHLO response the same as AUTH. (issue #603)
+* Dropped support for .NET 4.0.
+
+Note: As of 2.0, XOAUTH2 is no longer in the list of SASL mechanisms that is tried
+when using the Authenticate() methods that have existed pre-MailKit 2.0.
+Instead, you must now use Authenticate(SaslMechanism, CancellationToken).
+
+An example usage might look like this:
+
+```csharp
+// Note: The Uri isn't used except with ICredentials.GetCredential (Uri) so unless
+// you implemented your own ICredentials class, the Uri is a dummy argument.
+var uri = new Uri ("imap://imap.gmail.com");
+var oauth2 = new SaslMechanismOAuth2 (uri, username, auth_token);
+
+client.Authenticate (oauth2);
+```
+
+### MailKit 1.22.0
+
+* Enable TLSv1.1 and 1.2 for .NETStandard.
+* Read any remaining literal data after parsing headers. Fixes an issue when requesting
+  specific headers in an ImapFolder.Fetch() request if the server sends an extra newline.
+
+### MailKit 1.20.0
+
+* Fixed UniqueIdRange.ToString() to always output a string in the form ${start}:${end} even if
+  start == end. (issue #572)
+
+### MailKit 1.18.1
+
+* Gracefully handle IMAP COPYUID resp-codes without src or dest uid-set tokens. (issue #555)
+* Be more lenient with unquoted IMAP folder names containing ']'. (issue #557)
+
+### MailKit 1.18.0
+
+* Improved logic for cached FolderAttributes on ImapFolder objects.
+* If/when the \NonExistent flag is present, reset ImapFolder state as it probably means
+  another client has deleted the folder.
+* Added work-around for home.pl which sends an untagged `* [COPYUID ...]` response
+  without an `OK` (technically, the COPYUID resp-code should only appear in the tagged
+  response, but accept it anyway).
+
 ### MailKit 1.16.2
 
 * Added a leaveOpen param to the ProtocolLogger .ctor. (issue #506)

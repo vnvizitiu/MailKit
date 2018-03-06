@@ -141,7 +141,7 @@ which should improve performance of sending messages (although might not be very
 
 ## License Information
 
-MailKit is Copyright (C) 2013-2017 Xamarin Inc. and is licensed under the MIT license:
+MailKit is Copyright (C) 2013-2018 Xamarin Inc. and is licensed under the MIT license:
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -166,7 +166,7 @@ MailKit is Copyright (C) 2013-2017 Xamarin Inc. and is licensed under the MIT li
 The easiest way to install MailKit is via [NuGet](https://www.nuget.org/packages/MailKit/).
 
 In Visual Studio's [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console),
-simply enter the following command:
+enter the following command:
 
     Install-Package MailKit
 
@@ -188,7 +188,7 @@ Fill in the areas outlined in red and then click **OK**. This will recursively c
 ## Updating the Source Code
 
 Occasionally you might want to update your local copy of the source code if I have made changes to MailKit since you
-downloaded the source code in the step above. To do this using the command-line version fo Git, you'll need to issue
+downloaded the source code in the step above. To do this using the command-line version of Git, you'll need to issue
 the following commands in your terminal within the MailKit directory:
 
     git pull
@@ -204,16 +204,15 @@ directory and select **Git Sync...** in the menu. Once you do that, you'll need 
 
 In the top-level MailKit directory, there are a number of solution files; they are:
 
-* **MailKit.sln** - includes the projects for .NET 4.0, .NET 4.5, .NETStandard 1.3, Windows Universal 8.1,
+* **MailKit.sln** - includes the projects for .NET 4.5, .NETStandard 1.3/1.6/2.0, Windows Universal 8.1,
   Xamarin.Android, and Xamarin.iOS.
 * **MailKit.Mobile.sln** - includes only the Xamarin.iOS and Xamarin.Android projects.
 * **MailKit.Net45.sln** - includes only the .NET 4.5 project and the unit tests.
-* **MailKit.Net40.sln** - includes only the .NET 4.0 project.
 
 If you don't have the Xamarin products, you'll probably want to open the MailKit.Net45.sln instead of MailKit.sln.
 
 Once you've opened the appropriate MailKit solution file in either [Xamarin Studio](https://www.xamarin.com/download)
-or [Visual Studio 2017](https://www.visualstudio.com/downloads/), you can simply choose the **Debug** or **Release**
+or [Visual Studio 2017](https://www.visualstudio.com/downloads/), you can choose the **Debug** or **Release**
 build configuration and then build.
 
 Note: The **Release** build will generate the xml API documentation, but the **Debug** build will not.
@@ -255,10 +254,6 @@ I just wanted to let you know that Monica and I were going to go play some paint
 
 				client.Connect ("smtp.friends.com", 587, false);
 
-				// Note: since we don't have an OAuth2 token, disable
-				// the XOAUTH2 authentication mechanism.
-				client.AuthenticationMechanisms.Remove ("XOAUTH2");
-
 				// Note: only needed if the SMTP server requires authentication
 				client.Authenticate ("joey", "password");
 
@@ -291,10 +286,6 @@ namespace TestClient {
 				client.ServerCertificateValidationCallback = (s,c,h,e) => true;
 
 				client.Connect ("pop.friends.com", 110, false);
-
-				// Note: since we don't have an OAuth2 token, disable
-				// the XOAUTH2 authentication mechanism.
-				client.AuthenticationMechanisms.Remove ("XOAUTH2");
 
 				client.Authenticate ("joey", "password");
 
@@ -332,10 +323,6 @@ namespace TestClient {
 				client.ServerCertificateValidationCallback = (s,c,h,e) => true;
 
 				client.Connect ("imap.friends.com", 993, true);
-
-				// Note: since we don't have an OAuth2 token, disable
-				// the XOAUTH2 authentication mechanism.
-				client.AuthenticationMechanisms.Remove ("XOAUTH2");
 
 				client.Authenticate ("joey", "password");
 
@@ -496,7 +483,7 @@ solution files are configured with the coding style used by MailKit. If you use 
 other editor, please try to maintain the existing coding style as best as you can.
 
 Once you've got some changes that you'd like to submit upstream to the official MailKit repository,
-simply send me a **Pull Request** and I will try to review your changes in a timely manner.
+send me a **Pull Request** and I will try to review your changes in a timely manner.
 
 If you'd like to contribute but don't have any particular features in mind to work on, check out the issue
 tracker and look for something that might pique your interest!
@@ -504,14 +491,12 @@ tracker and look for something that might pique your interest!
 ## Donate
 
 MailKit is a personal open source project that I have put thousands of hours into perfecting with the
-goal of making it not only the very best email framework for .NET, but the best email framework for
-any programming language. I need your help to achieve this.
+goal of making it the very best email framework for .NET. I need your help to achieve this.
 
-<a href="http://www.pledgie.com/campaigns/29300" target="_blank">
-  <img src="http://www.pledgie.com/campaigns/29300.png?skin_name=chrome"
-       alt="Click here to lend your support to MimeKit and MailKit by making a donation via pledgie.com!"
-       border="0" />
-</a>
+Donating helps pay for things such as web hosting, domain registration and licenses for developer tools
+such as a performance profiler, memory profiler, a static code analysis tool, and more.
+
+<a href="https://liberapay.com/MimeKit/donate" _target="blank"><img alt="Click here to lend your support to MimeKit and MailKit by making a donation!" src="https://liberapay.com/assets/widgets/donate.svg"></a>
 
 ## Reporting Bugs
 

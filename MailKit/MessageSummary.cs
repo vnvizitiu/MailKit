@@ -1,9 +1,9 @@
-//
+﻿//
 // MessageSummary.cs
 //
 // Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2018 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -355,6 +355,21 @@ namespace MailKit {
 		}
 
 		/// <summary>
+		/// Gets the preview text of the message.
+		/// </summary>
+		/// <remarks>
+		/// <para>The preview text is a short snippet of the beginning of the message
+		/// text, typically shown in a mail client's message list UI.</para>
+		/// <para>In order for this to work properly, it is necessary to include
+		/// <see cref="MessageSummaryItems.PreviewText"/> when fetching
+		/// summary information from a <see cref="IMailFolder"/>.</para>
+		/// </remarks>
+		/// <value>The preview text.</value>
+		public string PreviewText {
+			get; set;
+		}
+
+		/// <summary>
 		/// Gets the envelope of the message, if available.
 		/// </summary>
 		/// <remarks>
@@ -535,7 +550,7 @@ namespace MailKit {
 		/// </remarks>
 		/// <value>The index of the message.</value>
 		public int Index {
-			get; private set;
+			get; internal set;
 		}
 
 		#region GMail extension properties

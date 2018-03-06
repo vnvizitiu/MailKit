@@ -1,9 +1,9 @@
-//
+﻿//
 // SaslMechanismPlain.cs
 //
 // Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2018 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ namespace MailKit.Security {
 	/// </remarks>
 	public class SaslMechanismPlain : SaslMechanism
 	{
-		Encoding encoding;
+		readonly Encoding encoding;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
@@ -62,7 +62,36 @@ namespace MailKit.Security {
 		/// <para>-or-</para>
 		/// <para><paramref name="credentials"/> is <c>null</c>.</para>
 		/// </exception>
+		[Obsolete ("Use SaslMechanismPlain(Encoding, NetworkCredential) instead.")]
 		public SaslMechanismPlain (Uri uri, Encoding encoding, ICredentials credentials) : base (uri, credentials)
+		{
+			if (encoding == null)
+				throw new ArgumentNullException (nameof (encoding));
+
+			this.encoding = encoding;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
+		/// </summary>
+		/// <remarks>
+		/// Creates a new PLAIN SASL context.
+		/// </remarks>
+		/// <param name="uri">The URI of the service.</param>
+		/// <param name="encoding">The encoding to use for the user's credentials.</param>
+		/// <param name="userName">The user name.</param>
+		/// <param name="password">The password.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <para><paramref name="uri"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="encoding"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="userName"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="password"/> is <c>null</c>.</para>
+		/// </exception>
+		[Obsolete ("Use SaslMechanismPlain(Encoding, string, string) instead.")]
+		public SaslMechanismPlain (Uri uri, Encoding encoding, string userName, string password) : base (uri, userName, password)
 		{
 			if (encoding == null)
 				throw new ArgumentNullException (nameof (encoding));
@@ -83,7 +112,108 @@ namespace MailKit.Security {
 		/// <para>-or-</para>
 		/// <para><paramref name="credentials"/> is <c>null</c>.</para>
 		/// </exception>
+		[Obsolete ("Use SaslMechanismPlain(NetworkCredential) instead.")]
 		public SaslMechanismPlain (Uri uri, ICredentials credentials) : base (uri, credentials)
+		{
+			encoding = Encoding.UTF8;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
+		/// </summary>
+		/// <remarks>
+		/// Creates a new PLAIN SASL context.
+		/// </remarks>
+		/// <param name="uri">The URI of the service.</param>
+		/// <param name="userName">The user name.</param>
+		/// <param name="password">The password.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <para><paramref name="uri"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="userName"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="password"/> is <c>null</c>.</para>
+		/// </exception>
+		[Obsolete ("Use SaslMechanismPlain(string, string) instead.")]
+		public SaslMechanismPlain (Uri uri, string userName, string password) : base (uri, userName, password)
+		{
+			encoding = Encoding.UTF8;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
+		/// </summary>
+		/// <remarks>
+		/// Creates a new PLAIN SASL context.
+		/// </remarks>
+		/// <param name="encoding">The encoding to use for the user's credentials.</param>
+		/// <param name="credentials">The user's credentials.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <para><paramref name="encoding"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="credentials"/> is <c>null</c>.</para>
+		/// </exception>
+		public SaslMechanismPlain (Encoding encoding, NetworkCredential credentials) : base (credentials)
+		{
+			if (encoding == null)
+				throw new ArgumentNullException (nameof (encoding));
+
+			this.encoding = encoding;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
+		/// </summary>
+		/// <remarks>
+		/// Creates a new PLAIN SASL context.
+		/// </remarks>
+		/// <param name="encoding">The encoding to use for the user's credentials.</param>
+		/// <param name="userName">The user name.</param>
+		/// <param name="password">The password.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <para><paramref name="encoding"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="userName"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="password"/> is <c>null</c>.</para>
+		/// </exception>
+		public SaslMechanismPlain (Encoding encoding, string userName, string password) : base (userName, password)
+		{
+			if (encoding == null)
+				throw new ArgumentNullException (nameof (encoding));
+
+			this.encoding = encoding;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
+		/// </summary>
+		/// <remarks>
+		/// Creates a new PLAIN SASL context.
+		/// </remarks>
+		/// <param name="credentials">The user's credentials.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <paramref name="credentials"/> is <c>null</c>.
+		/// </exception>
+		public SaslMechanismPlain (NetworkCredential credentials) : base (credentials)
+		{
+			encoding = Encoding.UTF8;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MailKit.Security.SaslMechanismPlain"/> class.
+		/// </summary>
+		/// <remarks>
+		/// Creates a new PLAIN SASL context.
+		/// </remarks>
+		/// <param name="userName">The user name.</param>
+		/// <param name="password">The password.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// <para><paramref name="userName"/> is <c>null</c>.</para>
+		/// <para>-or-</para>
+		/// <para><paramref name="password"/> is <c>null</c>.</para>
+		/// </exception>
+		public SaslMechanismPlain (string userName, string password) : base (userName, password)
 		{
 			encoding = Encoding.UTF8;
 		}
@@ -132,9 +262,8 @@ namespace MailKit.Security {
 			if (IsAuthenticated)
 				throw new InvalidOperationException ();
 
-			var cred = Credentials.GetCredential (Uri, MechanismName);
-			var userName = encoding.GetBytes (cred.UserName);
-			var password = encoding.GetBytes (cred.Password);
+			var userName = encoding.GetBytes (Credentials.UserName);
+			var password = encoding.GetBytes (Credentials.Password);
 			var buffer = new byte[userName.Length + password.Length + 2];
 			int offset = 0;
 

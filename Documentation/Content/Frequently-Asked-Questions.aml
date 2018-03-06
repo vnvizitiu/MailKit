@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <topic id="Frequently-Asked-Questions" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
@@ -140,10 +140,6 @@
         <code language="c#">
 using (var client = new ImapClient ()) {
     client.Connect ("imap.gmail.com", 993, SecureSocketOptions.SslOnConnect);
-    
-    // disable OAuth2 authentication unless you are actually using an access_token
-    client.AuthenticationMechanisms.Remove ("XOAUTH2");
-    
     client.Authenticate ("user@gmail.com", "password");
     
     // do stuff...
@@ -164,8 +160,7 @@ using (var client = new ImapClient ()) {
           </externalLink> to learn how to do this.
         </para>
         <para>
-          Once you've got the access_token, you simply use it as if it were the password when
-          calling the <application>Authenticate</application> method.
+          Once you obtain an OAuth2 access token, you can use it with MailKit by using the access token to create a new OAuth2 SASL mechanism context and then authenticating with it.
         </para>
         <code language="c#">
 var certificate = new X509Certificate2 (@"C:\path\to\certificate.p12", "password", X509KeyStorageFlags.Exportable);
@@ -178,8 +173,11 @@ var credential = new ServiceAccountCredential (new ServiceAccountCredential.Init
 // Note: result will be true if the access token was received successfully
 bool result = await credential.RequestAccessTokenAsync (cancel.Token);
 
-// use the access token as the password string
-client.Authenticate ("user@gmail.com", credential.Token.AccessToken);
+// create an OAuth2 SASL context
+var oauth2 = new SaslMechanismOAuth2 ("user@gmail.com", credential.Token.AccessToken);
+
+// authenticate using the OAuth2 SASL mechanism
+client.Authenticate (oauth2);
         </code>
       </content>
     </section>
@@ -196,7 +194,7 @@ client.Authenticate ("user@gmail.com", credential.Token.AccessToken);
           You'll probably also want to set the <literal>filename</literal> parameter on the
           <literal>Content-Disposition</literal> header as well as the <literal>name</literal>
           parameter on the <literal>Content-Type</literal> header. The most convenient way to do this
-          is to simply use the <codeEntityReference qualifyHint="true">
+          is to use the <codeEntityReference qualifyHint="true">
           P:MimeKit.MimePart.FileName</codeEntityReference> property which will set both parameters
           for you as well as setting the <literal>Content-Disposition</literal> header value to
           <literal>attachment</literal> if it has not already been set to something else.
@@ -494,7 +492,7 @@ message.WriteTo (format, "message.eml");
         </para>
         <para>
           If you only care about getting a flattened list of the mailbox addresses in one of
-          the address headers, you can simply do something like this:
+          the address headers, you can do something like this:
         </para>
         <code language="c#">
 foreach (var mailbox in message.To.Mailboxes)
@@ -667,7 +665,7 @@ message.WriteTo (options, stream);
         </para>
         <code language="c#" source="Examples\ForwardExamples.cs" region="ForwardAttached"/>
         <para>
-          To forward a message by simply inlining the original message's text content, you can do something like this:
+          To forward a message by inlining the original message's text content, you can do something like this:
         </para>
         <code language="c#" source="Examples\ForwardExamples.cs" region="ForwardInline"/>
       </content>

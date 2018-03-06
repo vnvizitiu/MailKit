@@ -1,9 +1,9 @@
-//
-// MessagesArrivedEventArgs.cs
+﻿//
+// ImapCallbacks.cs
 //
 // Author: Jeffrey Stedfast <jestedfa@microsoft.com>
 //
-// Copyright (c) 2013-2017 Xamarin Inc. (www.xamarin.com)
+// Copyright (c) 2013-2018 Xamarin Inc. (www.xamarin.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,38 +24,20 @@
 // THE SOFTWARE.
 //
 
-using System;
+using System.IO;
 
-namespace MailKit {
+namespace MailKit.Net.Imap
+{
 	/// <summary>
-	/// Event args used when messages arrive in a folder.
+	/// A callback used when fetching message streams.
 	/// </summary>
 	/// <remarks>
-	/// Event args used when messages arrive in a folder.
+	/// <para>This callback is meant to be used with the various
+	/// <a href="Overload_MailKit_Net_Imap_ImapFolder_GetStreams.htm">GetStreams</a>
+	/// methods.</para>
+	/// <para>Once this callback returns, the stream argument will be disposed, so
+	/// it is important to consume stream right away and not add it to a queue
+	/// for later processing.</para>
 	/// </remarks>
-	public class MessagesArrivedEventArgs : EventArgs
-	{
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MailKit.MessagesArrivedEventArgs"/> class.
-		/// </summary>
-		/// <remarks>
-		/// Creates a new <see cref="MessagesArrivedEventArgs"/>.
-		/// </remarks>
-		/// <param name="count">The number of messages that just arrived.</param>
-		public MessagesArrivedEventArgs (int count)
-		{
-			Count = count;
-		}
-
-		/// <summary>
-		/// Get the number of messages that just arrived in the folder.
-		/// </summary>
-		/// <remarks>
-		/// Gets the number of messages that just arrived in the folder.
-		/// </remarks>
-		/// <value>The count.</value>
-		public int Count {
-			get; private set;
-		}
-	}
+	public delegate void ImapFetchStreamCallback (ImapFolder folder, int index, UniqueId uid, Stream stream);
 }

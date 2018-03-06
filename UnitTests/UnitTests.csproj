@@ -162,6 +162,9 @@
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream2.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream3.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream4.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstreams1.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstreams2.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstreams3.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream-section.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\getstream-section2.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\dovecot\greeting.txt" />
@@ -250,6 +253,7 @@
     <EmbeddedResource Include="Net\Imap\Resources\gmail\append.50.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\authenticate.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\capability.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\capability+login.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\count.examine.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\count.noop.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\examine-inbox.txt" />
@@ -274,6 +278,12 @@
     <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch.42.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch.43.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch.50.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch-previewtext7.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch-previewtext8.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch-previewtext9.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch-previewtext10.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch-previewtext11.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\fetch-previewtext12.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\go-ahead.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\greeting.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\list-all.txt" />
@@ -290,6 +300,7 @@
     <EmbeddedResource Include="Net\Imap\Resources\gmail\search-summary.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\select-unittests.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\set-flags.txt" />
+    <EmbeddedResource Include="Net\Imap\Resources\gmail\utf8accept.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\gmail\xlist.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\metadata\authenticate.txt" />
     <EmbeddedResource Include="Net\Imap\Resources\metadata\capability.txt" />
@@ -355,6 +366,9 @@
     <EmbeddedResource Include="Net\Pop3\Resources\lang\utf8.txt" />
     <EmbeddedResource Include="Net\Smtp\Resources\auth-required.txt" />
     <EmbeddedResource Include="Net\Smtp\Resources\auth-successful.txt" />
+    <EmbeddedResource Include="Net\Smtp\Resources\comcast-auth-login-password.txt" />
+    <EmbeddedResource Include="Net\Smtp\Resources\comcast-auth-login-username.txt" />
+    <EmbeddedResource Include="Net\Smtp\Resources\comcast-auth-login.txt" />
     <EmbeddedResource Include="Net\Smtp\Resources\comcast-auth-plain.txt" />
     <EmbeddedResource Include="Net\Smtp\Resources\comcast-data.txt" />
     <EmbeddedResource Include="Net\Smtp\Resources\comcast-data-done.txt" />
@@ -397,7 +411,7 @@
     <MonoDevelop>
       <Properties>
         <Policies>
-          <DotNetNamingPolicy DirectoryNamespaceAssociation="PrefixedHierarchical" ResourceNamePolicy="FileFormatDefault" />
+          <DotNetNamingPolicy ResourceNamePolicy="FileFormatDefault" DirectoryNamespaceAssociation="PrefixedHierarchical" />
         </Policies>
       </Properties>
     </MonoDevelop>

@@ -6,6 +6,7 @@
 * [Are MimeKit and MailKit completely free? Can I use them in my proprietary product(s)?](#CompletelyFree)
 * [Why do I get `The remote certificate is invalid according to the validation procedure` when I try to Connect?](#InvalidSslCertificate)
 * [How can I get a protocol log for IMAP, POP3, or SMTP to see what is going wrong?](#ProtocolLog)
+* [How can I cancel the Connect() or ConnectAsync() methods or override the timeout?](#CancelConnect)
 * [Why doesn't MailKit find some of my GMail POP3 or IMAP messages?](#GMailHiddenMessages)
 * [How can I access GMail using MailKit?](#GMailAccess)
 * [How can I log in to a GMail account using OAuth 2.0?](#GMailOAuth2)
@@ -31,6 +32,7 @@
 * [Why do I get InvalidOperationException: "The folder is not currently open."?](#FolderNotOpenException)
 * [Why doesn't ImapFolder.MoveTo() move the message out of the source folder?](#ImapMoveDoesNotMove)
 * [How can I mark messages as read using IMAP?](#ImapMarkAsRead)
+* [How can I re-synchronize the cache for an IMAP folder?](#ImapFolderResync)
 
 ### SmtpClient
 * [How can I send email to the SpecifiedPickupDirectory?](#SpecifiedPickupDirectory)
@@ -56,11 +58,12 @@ that has been signed by a trusted Certificate Authority. When your system is una
 validate the mail server's certificate because it is not signed by a known and trusted
 Certificate Authority, the above error will occur.
 
-You can work around this problem by supplying a custom [RemoteServerCertificateValidationCallback](https://msdn.microsoft.com/en-us/library/ms145054)
+You can work around this problem by supplying a custom [RemoteCertificateValidationCallback](https://msdn.microsoft.com/en-us/library/ms145054)
 and setting it on the client's [ServerCertificateValidationCallback](http://mimekit.net/docs/html/P_MailKit_MailService_ServerCertificateValidationCallback.htm)
 property.
 
-In the most simplest example, you could do something like this (although I would strongly recommend against it in production use):
+In the most simplest example, you could do something like this (although I would strongly recommend against it in
+production use):
 
 ```csharp
 using (var client = new SmtpClient ()) {
@@ -76,7 +79,7 @@ Most likely you'll want to instead compare the certificate's [Thumbprint](https:
 property to a known value that you have verified at a prior date.
 
 You could also use this callback to prompt the user (much like you have probably seen web browsers do)
-as to whether or not certificate should be trusted.
+as to whether or not the certificate should be trusted.
 
 ### <a name="ProtocolLog">Q: How can I get a protocol log for IMAP, POP3, or SMTP to see what is going wrong?</a>
 
@@ -101,6 +104,43 @@ information including your authentication credentials. This information will gen
 encoded blob immediately following an `AUTHENTICATE` or `AUTH` command (depending on the type of server).
 The only exception to this case is if you are authenticating with `NTLM` in which case I *may* need this
 information, but *only if* the bug/error is in the authentication step.
+
+### <a name="CancelConnect">Q: How can I cancel the Connect() or ConnectAsync() methods or override the timeout?</a>
+
+One of the limitations in MailKit is that the `SmtpClient`, `Pop3Client` and `ImapClient` `Connect()`/`ConnectAsync()`
+methods cannot be interrupted while the underlying socket is connecting. Cancelling the `CancellationToken` and/or
+overriding the client `Timeout` property will not work.
+
+Sadly, this is because `System.Net.Sockets.Socket`'s `Connect()` method does not respect the timeout values and there
+is no `ConnectAsync()` method that takes a `CancellationToken` argument.
+
+Luckily, each of MailKit's client implementations *does* provide `Connect()` and `ConnectAsync()` methods that take
+an existing `Socket` argument that has already been connected.
+
+To interrupt a socket connecting to a remote host using a `CancellationToken`, you could do this:
+
+```csharp
+static Task ConnectAsync (Socket socket, string host, int port, CancellationToken cancellationToken)
+{
+	var completion = new TaskCompletionSource<bool> ();
+	
+	socket.BeginConnect (host, port, result => {
+		try {
+			socket.EndConnect (result);
+			completion.TrySetResult (true);
+		} catch (Exception ex) {
+			completion.TrySetException (ex);
+		}
+	}, null);
+
+	cancellationToken.Register (() => {
+		completion.SetException (new OperationCanceledException ());
+		socket.Close ();
+	});
+	
+	return completion.Task;
+}
+```
 
 ### <a name="GMailHiddenMessages">Q: Why doesn't MailKit find some of my GMail POP3 or IMAP messages?</a>
 
@@ -128,10 +168,6 @@ code snippet to connect to GMail via IMAP:
 using (var client = new ImapClient ()) {
     client.ServerCertificateValidationCallback = (s,c,ch,e) => true;
     client.Connect ("imap.gmail.com", 993, SecureSocketOptions.SslOnConnect);
-    
-    // disable OAuth2 authentication unless you are actually using an access_token
-    client.AuthenticationMechanisms.Remove ("XOAUTH2");
-    
     client.Authenticate ("user@gmail.com", "password");
     
     // do stuff...
@@ -158,7 +194,7 @@ var credential = new ServiceAccountCredential (new ServiceAccountCredential
     .Initializer ("your-developer-id@developer.gserviceaccount.com") {
     // Note: other scopes can be found here: https://developers.google.com/gmail/api/auth/scopes
     Scopes = new[] { "https://mail.google.com/" },
-    User = "username@gmail.com"
+    User = "user@gmail.com"
 }.FromCertificate (certificate));
 
 bool result = await credential.RequestAccessTokenAsync (CancellationToken.None);
@@ -166,15 +202,15 @@ bool result = await credential.RequestAccessTokenAsync (CancellationToken.None);
 // Note: result will be true if the access token was received successfully
 ```
 
-Now that you have an access token (`credential.Token.AccessToken`), you can use it with MailKit as if it were
-the password:
+Now that you have an access token (`credential.Token.AccessToken`), you can use it with MailKit by using the
+token to create a new OAuth2 SASL mechanism context and then authenticating with it:
 
 ```csharp
 using (var client = new ImapClient ()) {
     client.Connect ("imap.gmail.com", 993, true);
-    
-    // use the access token as the password string
-    client.Authenticate ("username@gmail.com", credential.Token.AccessToken);
+
+    var oauth2 = new SaslMechanismOAuth2 ("user@gmail.com", credential.Token.AccessToken);
+    client.Authenticate (oauth2);
 }
 ```
 
@@ -187,7 +223,7 @@ container which you'll then want to add the message body to first. Once you've a
 then add MIME parts to it that contain the content of the files you'd like to attach, being sure to set
 the `Content-Disposition` header value to attachment. You'll probably also want to set the `filename`
 parameter on the `Content-Disposition` header as well as the `name` parameter on the `Content-Type`
-header. The most convenient way to do this is to simply use the
+header. The most convenient way to do this is to use the
 [MimePart.FileName](http://www.mimekit.net/docs/html/P_MimeKit_MimePart_FileName.htm) property which
 will set both parameters for you as well as setting the `Content-Disposition` header value to `attachment`
 if it has not already been set to something else.
@@ -213,7 +249,7 @@ Will you be my +1?
 
 // create an image attachment for the file located at path
 var attachment = new MimePart ("image", "gif") {
-    ContentObject = new ContentObject (File.OpenRead (path), ContentEncoding.Default),
+    Content = new MimeContent (File.OpenRead (path), ContentEncoding.Default),
     ContentDisposition = new ContentDisposition (ContentDisposition.Attachment),
     ContentTransferEncoding = ContentEncoding.Base64,
     FileName = Path.GetFileName (path)
@@ -258,7 +294,7 @@ builder.Attachments.Add (@"C:\Users\Joey\Documents\party.ics");
 message.Body = builder.ToMessageBody ();
 ```
 
-For more information, see [Creating Messages](http://www.mimekit.net/docs/html/CreatingMessages.htm).
+For more information, see [Creating Messages](http://www.mimekit.net/docs/html/Creating-Messages.htm).
 
 ### <a name="MessageBody">Q: How can I get the main body of a message?</a>
 
@@ -335,7 +371,7 @@ for this: [TextBody](http://www.mimekit.net/docs/html/P_MimeKit_MimeMessage_Text
 appropriate body part with a `Content-Type` of `text/html` that can be interpreted as the message body.
 Likewise, the `TextBody` property can be used to get the `text/plain` version of the message body.
 
-For more information, see [Working with Messages](http://www.mimekit.net/docs/html/WorkingWithMessages.htm).
+For more information, see [Working with Messages](http://www.mimekit.net/docs/html/Working-With-Messages.htm).
 
 ### <a name="HasAttachments">Q: How can I tell if a message has attachments?</a>
 
@@ -459,7 +495,7 @@ class HtmlPreviewVisitor : MimeVisitor
 
         if (!File.Exists (path)) {
             using (var output = File.Create (path))
-                image.ContentObject.DecodeTo (output);
+                image.Content.DecodeTo (output);
         }
 
         return "file://" + path.Replace ('\\', '/');
@@ -674,7 +710,7 @@ the attachment that you'd like to save, here's how you might save it:
 
 ```csharp
 using (var stream = File.Create (fileName))
-    attachment.ContentObject.DecodeTo (stream);
+    attachment.Content.DecodeTo (stream);
 ```
 
 Pretty simple, right?
@@ -702,7 +738,7 @@ foreach (var attachment in message.Attachments) {
         } else {
             var part = (MimePart) attachment;
             
-            part.ContentObject.DecodeTo (stream);
+            part.Content.DecodeTo (stream);
         }
     }
 }
@@ -759,7 +795,7 @@ To: John Smith <john@smith.com>
 ```
 
 If you only care about getting a flattened list of the mailbox addresses in a `From`, `To`, or `Cc`
-header, you can simply do something like this:
+header, you can do something like this:
 
 ```csharp
 foreach (var mailbox in message.To.Mailboxes)
@@ -868,7 +904,7 @@ and then do this:
 static Stream DecryptEmbeddedPgp (TextPart text)
 {
     using (var memory = new MemoryStream ()) {
-        text.ContentObject.DecodeTo (memory);
+        text.Content.DecodeTo (memory);
         memory.Position = 0;
 
         using (var ctx = new MyGnuPGContext ()) {
@@ -1247,7 +1283,7 @@ public static MimeMessage Forward (MimeMessage original, MailboxAddress from, IE
 }
 ```
 
-To forward a message by simply inlining the original message's text content, you can do something like this:
+To forward a message by inlining the original message's text content, you can do something like this:
 
 ```csharp
 public static MimeMessage Forward (MimeMessage original, MailboxAddress from, IEnumerable<InternetAddress> to)
@@ -1379,7 +1415,7 @@ messages.
 
 If the server supports the `UIDPLUS` extension, then MailKit will attempt to `EXPUNGE` the subset of
 messages that it just marked for deletion, however, if the `UIDPLUS` extension is not supported by the
-IMAP server, then it cannot safely expunge just that subset of messages and so it simply stops there.
+IMAP server, then it cannot safely expunge just that subset of messages and so it stops there.
 
 My guess is that your server supports neither `MOVE` nor `UIDPLUS` and that is why clients like Outlook
 continue to see the messages in your folder. I believe, however, that Outlook has a setting to show
@@ -1406,6 +1442,103 @@ To mark messages as unread, you would *remove* the `\Seen` flag, like so:
 
 ```csharp
 folder.RemoveFlags (uids, MessageFlags.Seen, true);
+```
+
+### <a name="ImapFolderResync">Q: How can I re-synchronize the cache for an IMAP folder?</a>
+
+Assuming your IMAP server does not support the `QRESYNC` extension (which simplifies this proceedure a ton),
+here is some simple code to illustrate how to go about re-synchronizing your cache with the remote IMAP
+server.
+
+```csharp
+/// <summary>
+/// Just a simple class to represent the cached information about a message.
+/// </summary>
+class CachedMessageInfo
+{
+	public UniqueId UniqueId;
+	public MessageFlags Flags;
+	public HashSet<string> UserFlags;
+	public Envelope Envelope;
+	public BodyPart Body;
+}
+
+/// <summary>
+/// Resynchronize the cache with the remote IMAP folder.
+/// </summary>
+/// <param name="folder">The IMAP folder.</param>
+/// <param name="cache">The local cache of message metadata.</param>
+/// <param name="cachedUidValidity">The cached UIDVALIDITY value of the IMAP folder from a previous session.</param>
+static void ResyncFolder (ImapFolder folder, List<CachedMessageInfo> cache, ref uint cachedUidValidity)
+{
+	IList<IMessageSummary> summaries;
+
+	// Step 1: Open the folder.
+
+	// Note: we only need read-only access to update our cache, but depending on
+	// what you plan to do with the folder after resynchronizing, you may want
+	// top open the folder in read-write mode instead.
+	folder.Open (FolderAccess.ReadOnly);
+
+	if (cache.Count > 0) {
+		if (folder.UidValidity == cachedUidValidity) {
+			// Step 2: Remove messages from our cache that no longer exist on the server.
+
+			// get the full list of UIDs on the server...
+			var all = folder.Search (SearchQuery.All);
+
+			// remove any messages from our cache that no longer exist...
+			for (int i = 0; i < cache.Count; i++) {
+				if (!all.Contains (cache[i].UniqueId)) {
+					cache.RemoveAt (i);
+					i--;
+				}
+			}
+
+			// Step 3: Sync any flag changes for our cached messages.
+
+			// get a list of known uids... astute observers will note that an easy
+			// optimization to make here would be to merge this loop with the above
+			// loop.
+			var known = new UniqueIdSet (SortOrder.Ascending);
+			for (int i = 0; i < cache.Count; i++)
+				known.Add (cache[i].UniqueId);
+
+			// fetch the flags for our known messages...
+			summaries = folder.Fetch (known, MessageSummaryItems.Flags);
+			for (int i = 0; i < summaries.Count; i++) {
+				// Note: the indexes should match up with our cache, but it wouldn't
+				// hurt to add error checking to make sure. I'm not bothering to here
+				// for simplicity reasons.
+				cache[i].Flags = summaries[i].Flags.Value;
+				cache[i].UserFlags = summaries[i].UserFlags;
+			}
+		} else {
+			// The UIDVALIDITY of the folder has changed. This means that our entire
+			// cache is obsolete. We need to clear our cache and start from scratch.
+			cachedUidValidity = folder.UidValidity;
+			cache.Clear ();
+		}
+	} else {
+		// We have nothing cached, so just start from scratch.
+		cachedUidValidity = folder.UidValidity;
+	}
+
+	// Step 4: Fetch the messages we don't already know about and add them to our cache.
+
+	summaries = folder.Fetch (cache.Count, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure);
+	for (int i = 0; i < summaries.Count; i++) {
+		cache.Add (new CachedMessageInfo {
+			UniqueId = summaries[i].UniqueId,
+			Flags = summaries[i].Flags.Value,
+			UserFlags = summaries[i].UserFlags,
+			Envelope = summaries[i].Envelope,
+			Body = summaries[i].Body
+		});
+	}
+
+	// Tada! Now we are resynchronized with the server!
+}
 ```
 
 ## SmtpClient
